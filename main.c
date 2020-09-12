@@ -180,7 +180,6 @@ int main()
 
     while(1) {
 
-        wait(10);
         in_frame_start();
 
         gs_clear(0, 0);
