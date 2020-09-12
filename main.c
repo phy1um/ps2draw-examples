@@ -8,7 +8,6 @@
 #include <dma.h>
 #include <draw.h>
 
-#include <time.h>
 #include <stdio.h>
 
 #include "gs.h"
@@ -16,9 +15,6 @@
 #include "inttypes.h"
 #include "inputs.h"
 #include "ps2math.h"
-
-extern void VU1_Prog_CodeStart();
-extern void *VU1_Prog_CodeEnd;
 
 float tris[] = {
         0, 0, 0,
@@ -40,6 +36,7 @@ float tris[] = {
 };
 
 
+/*
 void wait(unsigned long ms)
 {
     clock_t start = clock();
@@ -51,6 +48,7 @@ void wait(unsigned long ms)
     }
     while(diff*1000 < ms);
 }
+*/
 
 
 #define XOFF (2110 << 4)
@@ -61,8 +59,6 @@ void putv3f(drawbuf *b, v3f p)
     giftag_packed_xyz2(b, ftoi4(p[0]*HSCALE) + XOFF, ftoi4(p[1]) + YOFF, p[2], 0);
 }
 
-static int xx = 0;
-static int yy = 0;
 static float ry = 0;
 static float rx = 0;
 static m4f rot;
@@ -71,23 +67,16 @@ void update() {
     sys_pad_poll();
 
     if(in_btn_held(DPAD_LEFT)) {
-        xx -= 4;
         ry -= 0.2f;
     }
     if(in_btn_held(DPAD_RIGHT)) {
-        xx += 4;
         ry += 0.2f;
     }
     if(in_btn_held(DPAD_UP)) {
-        yy -= 4;
         rx -= 0.2f;
     }
     if(in_btn_held(DPAD_DOWN)) {
-        yy += 4;
         rx += 0.2f;
-    }
-    if(in_btn_pressed(BTN_X)) {
-        printf("Cursor @ %d,%d\n", xx, yy);
     }
     p2m_make_rot3d(rx, ry, 0, rot);
 }
@@ -120,6 +109,7 @@ void draw(drawbuf *b)
     drawbuf_begin(b);
     giftag_begin(b, GIF_FLG_PACKED);
     giftag_push_register(b, GIF_REG_AD);
+    // Shaded traingle primitive
     giftag_packed_regs(b, GS_REG_PRIM, GS_SET_PRIM(3, 1,0,0,0,0,0,0,0));
     giftag_force_nloops(b,1);
     giftag_end(b);
@@ -163,10 +153,6 @@ void draw(drawbuf *b)
     drawbuf_submit_normal(b, DMA_CHANNEL_GIF);
 
 }
-
-#define PROG_OFFSET 0x0
-
-#define VERTEX_FORMAT ( (u64) GIF_REG_RGBAQ | (((u64) GIF_REG_XYZ2) << 4) )
 
 int main()
 {
