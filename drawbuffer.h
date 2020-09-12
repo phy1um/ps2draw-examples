@@ -123,7 +123,7 @@ void drawbuf_print(drawbuf *b);
 
 
 void giftag_packed_prim(drawbuf *b, uint64_t primdata);
-void giftag_packed_rgbaq(drawbuf *db, char r, char g, char b, char a);
+void giftag_packed_rgbaq(drawbuf *db, unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 void giftag_packed_xyz2(drawbuf *d, uint16_t x, uint16_t y, uint32_t z, int adc);
 
 #endif

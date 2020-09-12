@@ -222,7 +222,7 @@ void giftag_packed_prim(drawbuf *b, uint64_t primdata)
     giftag_push_data(b, 0);
 }
 
-void giftag_packed_rgbaq(drawbuf *db, char r, char g, char b, char a)
+void giftag_packed_rgbaq(drawbuf *db, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
     giftag_push_data(db, ((uint64_t)r) | (((uint64_t)g) << 32));
     giftag_push_data(db, ((uint64_t)b) | (((uint64_t)a) << 32));
