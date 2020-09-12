@@ -61,6 +61,7 @@ void putv3f(drawbuf *b, v3f p)
 
 static float ry = 0;
 static float rx = 0;
+static float xx = 0;
 static m4f rot;
 
 void update() {
@@ -78,6 +79,12 @@ void update() {
     if(in_btn_held(DPAD_DOWN)) {
         rx += 0.2f;
     }
+    if(in_btn_held(BTN_R1)) {
+        xx += 3.2f;
+    }
+    if(in_btn_held(BTN_L1)) {
+        xx -= 3.2f;
+    }
     p2m_make_rot3d(rx, ry, 0, rot);
 }
 
@@ -93,6 +100,8 @@ void transform(v3f from, v3f to)
 
     out[0] *= 100;
     out[1] *= 100;
+
+    out[0] += xx;
 
     to[0] = out[0]/out[3];
     to[1] = out[1]/out[3];
@@ -136,6 +145,7 @@ void draw(drawbuf *b)
             uv[1] /= 480.0f;
 
             giftag_packed_rgbaq(b, uv[0]*255, 0, uv[1]*255, 0x80);
+            //giftag_packed_rgbaq(b, 255, 0, 0, 0x80);
             putv3f(b, v);
         }
     }
@@ -144,7 +154,7 @@ void draw(drawbuf *b)
     giftag_end(b);
 
     drawbuf_mark_last_gif_eop(b);
-    //drawbuf_print(b);
+    drawbuf_print(b);
 
     gs_draw_finish(b);
 
