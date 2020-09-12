@@ -18,10 +18,6 @@
 #define END_OFFSET 2048.5625f
 
 #define BLENDING 0
-
-// local functions
-int gs_draw_rect_strips(drawbuf *b, struct colour *rgb, float x, float y, float w, float h);
-
 // File state is a cheap hack for now
 static framebuffer_t fb;
 static zbuffer_t zbuf;
@@ -94,6 +90,10 @@ zbuffer_t *gs_get_zbuf()
     return &zbuf;
 }
 
+/**
+ * Clear the screen
+ * Command sent using a small static DMA buffer, does nto use drawbuf (for now?)
+ */
 int gs_clear(drawbuf *b, struct colour *rgb)
 {
     qword_t *qws = static_buffer;
@@ -104,110 +104,6 @@ int gs_clear(drawbuf *b, struct colour *rgb)
     //qws = draw_enable_tests(qws, 0, gs_get_zbuf());
     dma_channel_send_normal(DMA_CHANNEL_GIF, static_buffer , qws - static_buffer, 0, 0);
     dma_wait_fast();
-    return 1;
-}
-
-/**
- * Append commands to a drawbuffer to clear the screen
- *
- * Does not create a new DMA packet.
- *
-int gs_clear(drawbuf *b, struct colour *rgb)
-{
-    // Disable tests - every pixel should be drawn regardless of depth etc
-    giftag_begin(b, GIF_FLG_PACKED);
-    giftag_push_register(b, GIF_REG_AD);
-    giftag_packed_regs(b, GS_REG_TEST,
-                                GS_SET_TEST(DRAW_ENABLE,ATEST_METHOD_NOTEQUAL,0x00,ATEST_KEEP_FRAMEBUFFER,
-                                DRAW_DISABLE,DRAW_DISABLE,
-                                DRAW_ENABLE,ZTEST_METHOD_ALLPASS));
-    giftag_force_nloops(b, 1);
-    giftag_end(b);
-
-    // Force primitive override, draw flat shading
-    giftag_begin(b, GIF_FLG_PACKED);
-    giftag_push_register(b, GIF_REG_AD);
-    giftag_packed_regs(b, GS_REG_PRMODECONT, GS_SET_PRMODECONT(PRIM_OVERRIDE_ENABLE));
-    giftag_packed_regs(b, GS_REG_PRMODE, GS_SET_PRMODE(0,0,0,0,0,0,0,1));
-    giftag_force_nloops(b, 2);
-    giftag_end(b);
-
-    // Fill the screen with a bunch of coloured rectangles
-    gs_draw_rect_strips(b, rgb, 2048-(fb.width), 2048-(fb.height), fb.width, fb.height);
-
-    // Disable primitive override
-    giftag_begin(b, GIF_FLG_PACKED);
-    giftag_push_register(b, GIF_REG_AD);
-    giftag_packed_regs(b, GS_REG_PRMODECONT, GS_SET_PRMODECONT(PRIM_OVERRIDE_DISABLE));
-    giftag_force_nloops(b, 1);
-    giftag_end(b);
-
-    // Re-enable pixel tests
-    giftag_begin(b, GIF_FLG_PACKED);
-    giftag_push_register(b, GIF_REG_AD);
-    giftag_packed_regs(b, GS_REG_TEST,
-                                GS_SET_TEST(DRAW_ENABLE,ATEST_METHOD_NOTEQUAL,0x00,ATEST_KEEP_FRAMEBUFFER,
-                                DRAW_DISABLE,DRAW_DISABLE,
-                                DRAW_ENABLE,zbuf.method));
-    giftag_force_nloops(b, 1);
-    giftag_end(b);
-
-    return 1;
-} */
-
-
-#define AS_INT(f) *((int*)&f)
-/**
- * Cheap translation of PS2SDK draw's version of this function to my
- * buffer abstraction.
- *
- * Does not create a new DMA packet
- */
-int gs_draw_rect_strips(drawbuf *b, struct colour *rgb, float x, float y, float w, float h)
-{
-    // Floats to fixed point
-    int fx0 = ftoi4(x);
-    int fy0 = ftoi4(y+START_OFFSET);
-    int fx1 = ftoi4(x+w);
-    int fy1 = ftoi4(y+h+END_OFFSET);
-
-    // Set PRIM and RGBAQ (fix colour rects)
-    giftag_begin(b, GIF_FLG_PACKED);
-    giftag_push_register(b, GIF_REG_AD);
-    giftag_packed_regs(b, GS_REG_PRIM, GS_SET_PRIM(PRIM_SPRITE, 0,0,0, BLENDING, 0,0, 0, 0));
-    giftag_packed_regs(b, GS_REG_RGBAQ, GS_SET_RGBAQ(rgb->r, rgb->g, rgb->b, rgb->a, AS_INT(rgb->q)));
-    giftag_force_nloops(b, 2);
-    giftag_end(b);
-    // END PRIM and RGBAQ
-
-    // XYZ data
-    giftag_begin(b, GIF_FLG_REGLIST);
-    // With reglist we can fit 2x more points over Packed
-    giftag_push_register(b, GS_REG_XYZ2);
-    giftag_push_register(b, GS_REG_XYZ2);
-
-    while(fx0 < fx1) {
-        giftag_push_data(b, GIF_SET_XYZ(fx0 + ftoi4(START_OFFSET), fy0, 0));
-        fx0 += 496;
-        if(fx0 >= fx1) {
-            fx0 = fx1;
-        }
-        giftag_push_data(b, GIF_SET_XYZ(fx0 + ftoi4(END_OFFSET), fy1, 0));
-        fx0 += 16;
-    }
-    // Calcualte how many qwords we wrote (nbytes % 4 should ALWAYS == 0 here)
-    // We subtract one qword for the GIF tag
-    int nbytes = (b->gs_packet_word_count - 4);
-    // Unneeded but safe way to force us to go to the next boundry
-    while(nbytes%4 != 0) nbytes++;
-    nbytes /= 4;
-    // Consider the case where no strips were written!
-    giftag_force_nloops(b, nbytes >= 0 ? nbytes : 0);
-
-    giftag_end(b);
-
-    drawbuf_mark_last_gif_eop(b);
-    // END XYZ data
     return 1;
 }
 
