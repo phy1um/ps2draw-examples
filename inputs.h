@@ -21,10 +21,9 @@ int in_btn_held(int btn);
 int in_btn_pressed(int b);
 int in_btn_release(int b);
 int in_frame_start();
-unsigned char * in_joystick_state();
+unsigned char *in_joystick_state();
 
 void sys_pad_poll();
 int sys_init_input();
-
 
 #endif

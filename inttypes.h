@@ -13,7 +13,6 @@
 
 #endif
 
-#define QWORD_SIZE (2*sizeof(uint64_t))
+#define QWORD_SIZE (2 * sizeof(uint64_t))
 
 #endif
-
