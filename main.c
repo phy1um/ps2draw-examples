@@ -16,6 +16,7 @@
 #include "inputs.h"
 #include "inttypes.h"
 #include "ps2math.h"
+#include "log.h"
 
 float tris[] = {0, 0, 0, 1, 0, 0, 0, 1, 0,
 
@@ -77,6 +78,7 @@ void update() {
 }
 
 void transform(v3f from, v3f to) {
+  // info("transforming [%f %f %f]", from[0], from[1], from[2]);
   v4f w;
   setv4(w, 0, 0, 0, 1);
   copyv3fto(from, w);
@@ -94,11 +96,11 @@ void transform(v3f from, v3f to) {
   to[1] = out[1] / out[3];
   to[2] = out[2] / out[3];
 
-  // logv3f("Vert: ", to);
+  // info("transformed to -> [%f %f %f]", to[0], to[1], to[2]);
 }
 
 void draw(drawbuf *b) {
-  int ntris = 4;
+  int ntris = 1;
   dma_wait_fast();
 
   drawbuf_begin(b);
@@ -139,10 +141,11 @@ void draw(drawbuf *b) {
   giftag_force_nloops(b, ntris);
   giftag_end(b);
 
-  drawbuf_mark_last_gif_eop(b);
-  drawbuf_print(b);
+  // drawbuf_mark_last_gif_eop(b);
 
   gs_draw_finish(b);
+
+  drawbuf_print(b);
 
   // DMA send
   // dma_channel_send_normal(DMA_CHANNEL_GIF, head,q - head, 0, 0);

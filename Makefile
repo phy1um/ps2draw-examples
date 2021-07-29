@@ -11,7 +11,7 @@ VCL=openvcl
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include 
 
-EE_CFLAGS += -Wall -Wextra --std=c99 -DPRINT_DMA_LOGS
+EE_CFLAGS += -Wall --std=c99 -DPRINT_DMA_LOGS
 
 EE_LDFLAGS = -L$(PS2SDK)/ee/common/lib -L$(PS2SDK)/ee/lib
 EE_LIBS = -lpad -ldma -lgraph -ldraw -lpatches -lmc -lc -lm -lkernel -ldebug

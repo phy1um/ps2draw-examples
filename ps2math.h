@@ -62,6 +62,5 @@ void p2m_make_rot3d(float x, float y, float z, m4f m);
   do {                                                                         \
     x = x < 0 ? 0 : x;                                                         \
   } while (0)
-#define fabs(x) ((x >= 0) ? x : -1 * x)
 
 #endif
