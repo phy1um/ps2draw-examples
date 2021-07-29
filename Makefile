@@ -20,6 +20,9 @@ PS2SDK=/usr/local/ps2dev/ps2sdk
 
 PS2HOST=192.168.20.99
 
+
+include .lintvars
+
 all: deploy
 
 vcl/%.o: vcl/%.vcl
@@ -34,6 +37,14 @@ reset:
 .PHONY: clean
 clean:
 	rm -f $(EE_BIN) $(EE_OBJS) $(ISO_TARGET)
+
+.PHONY: lint
+lint:
+	cpplint --filter=$(CPPLINT_FILTERS) --counting=total --linelength=$(CPPLINT_LINE_LENGTH) --extensions=c,h *.c *.h
+
+.PHONY: format
+format:
+	sudo docker run -v $(shell pwd):/workdir unibeautify/clang-format -i -sort-includes *.c *.h
 
 $(ISO_TARGET): $(EE_BIN) SYSTEM.CNF
 	mkisofs -l -o $(ISO_TARGET) $(EE_BIN) SYSTEM.CNF

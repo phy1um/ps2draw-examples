@@ -1,11 +1,11 @@
 
-#include "drawbuffer.h"
-#include "log.h"
 #include <stdio.h>
-
 #ifdef _EE
 #include <dma.h>
 #endif
+
+#include "drawbuffer.h"
+#include "log.h"
 
 #define SHIFT_AS_64(x, b) (((uint64_t)x) << b)
 

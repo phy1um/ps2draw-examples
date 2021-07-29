@@ -1,8 +1,9 @@
 #ifndef PS2_DRAWBUFFER_H
 #define PS2_DRAWBUFFER_H
 
-#include "inttypes.h"
 #include <string.h>
+
+#include "inttypes.h"
 
 struct gif_tag {
   uint64_t regs;

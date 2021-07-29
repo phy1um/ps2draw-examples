@@ -17,19 +17,13 @@
 #include "inttypes.h"
 #include "ps2math.h"
 
-float tris[] = {0, 0, 0, 1, 0,
-                0, 0, 1, 0,
+float tris[] = {0, 0, 0, 1, 0, 0, 0, 1, 0,
 
-                1, 0, 0, 1, 1,
-                0, 0, 1, 0,
+                1, 0, 0, 1, 1, 0, 0, 1, 0,
 
-                0, 0, 0, 0, 0,
-                1, 0, 1, 0,
+                0, 0, 0, 0, 0, 1, 0, 1, 0,
 
-                0, 0, 1, 0, 1,
-                1, 0, 1, 0
-
-};
+                0, 0, 1, 0, 1, 1, 0, 1, 0};
 
 /*
 void wait(unsigned long ms)
@@ -179,7 +173,6 @@ int main() {
   p2m_make_rot3d(0, ry, 0, rot);
 
   while (1) {
-
     in_frame_start();
 
     gs_clear(0, 0);
@@ -196,5 +189,5 @@ int main() {
   }
 
   while (1)
-    ;
+    continue;
 }
