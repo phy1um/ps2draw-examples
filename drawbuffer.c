@@ -1,5 +1,6 @@
 
 #include "drawbuffer.h"
+#include "log.h"
 #include <stdio.h>
 
 #ifdef _EE
@@ -16,7 +17,6 @@
 #define DMA_TYPE_CALL 5
 #define DMA_TYPE_RET 6
 #define DMA_TYPE_END 7
-
 
 void update_dma_tag_meta(drawbuf *b);
 
@@ -36,11 +36,18 @@ void drawbuf_begin(drawbuf *b)
  */
 void drawbuf_end(drawbuf *b)
 {
-    return;
+  if ( b->dmatag.active == 1 ) {
+    warn("ending drawbuffer while DMATag still active");
+  }
+  if( b->giftag.active == 1 ) {
+    warn("ending drawbuffer while GIFTag still active");
+  }
+  return;
 }
 
 void drawbuf_mark_last_gif_eop(drawbuf *b)
 {
+    info("marking GIFTag EOP");
     if(b->giftag.tgt) {
         *(b->giftag.tgt) |= (1 << 15);
     }
@@ -54,6 +61,7 @@ void drawbuf_mark_last_gif_eop(drawbuf *b)
  */
 void drawbuf_start_cnt(drawbuf *b)
 {
+    info("starting DMA CNT packet");
     // clear dmatag
     memset(&b->dmatag, 0, sizeof(struct dma_chain_tag));
     b->dmatag.active = 1;
@@ -70,6 +78,7 @@ void drawbuf_start_cnt(drawbuf *b)
  */
 void drawbuf_make_ref(drawbuf *b, int addr, int count)
 {
+    info("starting DMA REF packet");
     // clear dmatag
     memset(&b->dmatag, 0, sizeof(struct dma_chain_tag));
     b->dmatag.active = 1;
@@ -99,6 +108,7 @@ void drawbuf_dma_set_extra(drawbuf *b, uint64_t extra)
  */
 void drawbuf_dma_packet_end(drawbuf *b, int end)
 {
+    info("closing DMA packet");
     if(b->dmatag.active) {
         update_dma_tag_meta(b);
         // We are no longer building a dmatag, zero the pointer
@@ -109,9 +119,11 @@ void drawbuf_dma_packet_end(drawbuf *b, int end)
 void drawbuf_mark_last_dma_end(drawbuf *b)
 {
     if(b->dmatag.type == DMA_TYPE_CNT) {
+        info("marking last DMA packet as END");
         b->dmatag.type = DMA_TYPE_END;
     }
     else if(b->dmatag.type == DMA_TYPE_REF) {
+        info("marking last DMA packet as REFE (end of REF chain)");
         b->dmatag.type = DMA_TYPE_REFE;
     }
     update_dma_tag_meta(b);
@@ -119,13 +131,14 @@ void drawbuf_mark_last_dma_end(drawbuf *b)
 
 void update_dma_tag_meta(drawbuf *b)
 {
+    info("committing DMATag header to buffer");
     uint64_t *h = b->dmatag.tgt;
     while(b->dmatag.words % 4 != 0) {
         b->dmatag.words++;
     }
     int qwords = b->dmatag.words / 4;
     // Set the DMA tag
-    printf("DMATAG: words=%d, PCE=%d, TYPE=%d, ADDR=%d\n", b->dmatag.words, b->dmatag.pce, b->dmatag.type, b->dmatag.addr);
+    log_dbg("DMATag: words=%d, PCE=%d, TYPE=%d, ADDR=%u\n", b->dmatag.words, b->dmatag.pce, b->dmatag.type, b->dmatag.addr);
     *h = (qwords & 0xffff)
             | ((b->dmatag.pce & 0x3) << 26)
             | ((b->dmatag.type & 0x7) << 28)
@@ -142,6 +155,7 @@ void update_dma_tag_meta(drawbuf *b)
  */
 void giftag_begin(drawbuf *b, int gif_tag_type)
 {
+    info("starting GIFTag");
     // Clear GIF tag
     memset(&b->giftag, 0, sizeof(struct gif_tag));
     b->giftag.active = 1;
@@ -186,6 +200,7 @@ void giftag_push_register(drawbuf *b, uint64_t reg)
 void giftag_end(drawbuf *b)
 {
     if(b->giftag.active) {
+        info("committing GIFTag header to buffer");
         // Update flags with packet size
         uint64_t *h = b->giftag.tgt;
         *h = (b->giftag.nloop & 0x7fff)
@@ -248,6 +263,7 @@ void giftag_packed_regs(drawbuf *b, uint64_t reg, uint64_t value)
 void giftag_force_nloops(drawbuf *b, int nloops)
 {
     if(b->giftag.active) {
+        info("forcing GIFTag NLOOPS = %d", nloops)
         b->giftag.nloop = nloops;
     }
 }
@@ -269,10 +285,10 @@ void drawbuf_submit_normal(drawbuf *b, int channel)
 void drawbuf_print(drawbuf *b)
 {
     int len = drawbuf_size(b);
-    printf("Printing buffer of size %d\n", len);
+    info("Printing buffer of size %d\n", len);
     int qws = len/2;
     for(int i = 0; i < qws; i++) {
-        printf(" %d) %016lx %016lx\n", i, b->send_head[2*i], b->send_head[2*i+1]);
+        info(" %d) %016lx %016lx\n", i, b->send_head[2*i], b->send_head[2*i+1]);
     }
 }
 
