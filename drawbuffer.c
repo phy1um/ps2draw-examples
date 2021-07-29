@@ -138,7 +138,7 @@ void update_dma_tag_meta(drawbuf *b)
     }
     int qwords = b->dmatag.words / 4;
     // Set the DMA tag
-    log_dbg("DMATag: words=%d, PCE=%d, TYPE=%d, ADDR=%u\n", b->dmatag.words, b->dmatag.pce, b->dmatag.type, b->dmatag.addr);
+    log_dbg("DMATag: words=%d, PCE=%d, TYPE=%d, ADDR=%lu\n", b->dmatag.words, b->dmatag.pce, b->dmatag.type, b->dmatag.addr);
     *h = (qwords & 0xffff)
             | ((b->dmatag.pce & 0x3) << 26)
             | ((b->dmatag.type & 0x7) << 28)
@@ -245,8 +245,8 @@ void giftag_packed_rgbaq(drawbuf *db, unsigned char r, unsigned char g, unsigned
 
 void giftag_packed_xyz2(drawbuf *d, uint16_t x, uint16_t y, uint32_t z, int adc)
 {
-    giftag_push_data(d, ((uint64_t) x) | (((uint64_t)y) << 32));
-    giftag_push_data(d, ((uint64_t)z)<<4 | ((uint64_t)adc&1) << 111);
+    giftag_push_data(d, ((uint64_t) x) | SHIFT_AS_64(y, 32));
+    giftag_push_data(d, ((uint64_t)z)<<4 | SHIFT_AS_64(adc&1, 47));
 }
 
 
@@ -263,7 +263,7 @@ void giftag_packed_regs(drawbuf *b, uint64_t reg, uint64_t value)
 void giftag_force_nloops(drawbuf *b, int nloops)
 {
     if(b->giftag.active) {
-        info("forcing GIFTag NLOOPS = %d", nloops)
+        info("forcing GIFTag NLOOPS = %d", nloops);
         b->giftag.nloop = nloops;
     }
 }
@@ -285,10 +285,10 @@ void drawbuf_submit_normal(drawbuf *b, int channel)
 void drawbuf_print(drawbuf *b)
 {
     int len = drawbuf_size(b);
-    info("Printing buffer of size %d\n", len);
+    info("Printing buffer of size %d", len);
     int qws = len/2;
     for(int i = 0; i < qws; i++) {
-        info(" %d) %016lx %016lx\n", i, b->send_head[2*i], b->send_head[2*i+1]);
+        info(" %d) %016llx %016llx", i, b->send_head[2*i], b->send_head[2*i+1]);
     }
 }
 
