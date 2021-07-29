@@ -35,7 +35,7 @@ void p2m_cross_v3f(v3f a, v3f b, v3f out);
 void p2m_make_projection(float, m4f);
 void p2m_make_translation_m4f(m4f, float, float, float);
 void p2m_make_scale_m4f(m4f, float, float, float);
-void p2m_lookat(v3f eye, v3f center, v4f up, m4f out);
+void p2m_lookat(v3f eye, v3f center, v3f up, m4f out);
 void p2m_viewport(float x, float y, float w, float h, m4f m);
 
 void p2m_make_rot3d(float x, float y, float z, m4f m);
