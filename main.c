@@ -9,6 +9,7 @@
 #include <draw.h>
 
 #include <stdio.h>
+#include <malloc.h>
 
 #include "gs.h"
 #include "drawbuffer.h"
@@ -170,11 +171,11 @@ int main()
     struct gs_settings cfg = {
         .pos_x = 0,
         .pos_y = 0,
-        .width = 640,
+        .width = 664,
         .height = 448,
         .psm = GS_PSM_32,
         .psmz = GS_PSMZ_16S,
-        .mode = GRAPH_MODE_HDTV_480P,
+        .mode = GRAPH_MODE_NTSC,
         .interlaced = 0
     };
 

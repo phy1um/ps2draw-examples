@@ -4,11 +4,8 @@
 
 #ifdef _EE
 
+#include <stdint.h>
 #include <tamtypes.h>
-
-typedef u32 uint32_t;
-typedef u64 uint64_t;
-typedef u16 uint16_t;
 
 #else
 
